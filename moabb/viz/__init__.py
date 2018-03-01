@@ -51,7 +51,7 @@ class Results:
                 ppline_grp = f[name]
                 dlist = to_list(data_dict)
                 d1 = dlist[0]
-                dname = d1['dataset'].code
+                dname = d1['dataset'].name
                 if dname not in ppline_grp.keys():
                     # create dataset subgroup if nonexistant
                     dset = ppline_grp.create_group(dname)
@@ -96,10 +96,10 @@ class Results:
                     return False
                 else:
                     pipe_grp = f[p]
-                    if d.code not in pipe_grp.keys():
+                    if d.name not in pipe_grp.keys():
                         return False
                     else:
-                        dset = pipe_grp[d.code]
+                        dset = pipe_grp[d.name]
                         return (str(s) in dset['id'])
         return {k: pipeline_dict[k] for k in pipeline_dict.keys() if not already_computed(k, dataset, subj)}
 
@@ -158,4 +158,8 @@ def analyze(out_path, results=None, path=None, name='analysis'):
     plt.score_plot(data).savefig(os.path.join(analysis_path,'scores.pdf'))
     plt.time_line_plot(data).savefig(os.path.join(analysis_path,'time2d.pdf'))
 
-
+if __name__ == '__main__':
+    f = '/is/ei/vjayaram/ownCloud/Vinay_share/submissions/MOABB/RHvsLH_within.hdf5'
+    if os.path.isfile(f):
+        os.remove(f)
+    analyze(os.path.dirname(f), path=f)

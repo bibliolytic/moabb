@@ -77,7 +77,7 @@ class OpenvibeMI(BaseDataset):
             subjects=[1],
             sessions_per_subject=14,
             events=dict(right_hand=1, left_hand=2),
-            code='Openvibe Motor Imagery',
+            name='Openvibe Motor Imagery',
             interval=[tmin,tmax],
             paradigm='imagery'
             )

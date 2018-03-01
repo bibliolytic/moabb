@@ -59,7 +59,7 @@ class GigaDbMI(BaseDataset):
             subjects=list(range(1,53)),
             sessions_per_subject=1,
             events=dict(left_hand=1, right_hand=2),
-            code='GigaDb Motor Imagery',
+            name='GigaDb Motor Imagery',
             interval=[1,3],
             paradigm='imagery'
             )

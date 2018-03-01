@@ -44,9 +44,15 @@ class ImageryNClass(BaseMotorImagery):
         super().__init__(pipelines, evaluator, **kwargs)
 
     def verify(self, d):
-        print('Warning: Assumes events have already been selected per dataset')
         super().verify(d)
-        assert len(d.selected_events) == self.n_classes
+        assert len(d.event_id) < self.n_classes, '{} is not not enough classes for {} class'.format(len(d.event_id), self.n_classes)
+        if d.selected_events is None or len(d.selected_events) == 0:
+            print('Randomly choosing {} events'.format(self.n_classes))
+            keep = {}
+            for k in d.event_id.keys():
+                if len(keep) < self.n_classes:
+                    keep[k] = d.event_id[k]
+            d.selected_events = keep
 
     @property
     def scoring(self):

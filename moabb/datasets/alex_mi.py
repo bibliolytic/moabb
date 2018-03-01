@@ -54,7 +54,7 @@ class AlexMI(BaseDataset):
             subjects=list(range(1,9)),
             sessions_per_subject=1,
             events=dict(right_hand=2, feet=3, rest=4),
-            code='Alexandre Motor Imagery',
+            name='Alexandre Motor Imagery',
             interval=[0,3],
             paradigm='imagery'
             )

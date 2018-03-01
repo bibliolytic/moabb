@@ -6,12 +6,12 @@ Base class for a dataset
 class BaseDataset():
     """Base dataset"""
 
-    def __init__(self, subjects, sessions_per_subject, events, code, interval, paradigm):
+    def __init__(self, subjects, sessions_per_subject, events, name, interval, paradigm):
         self.subject_list = subjects
         self.n_sessions = sessions_per_subject
         self.event_id = events
         self.selected_events = None
-        self.code = code
+        self.name = name
         self.interval = interval
         self.paradigm = paradigm
 

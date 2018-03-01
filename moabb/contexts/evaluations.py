@@ -50,7 +50,8 @@ class CrossSubjectEvaluation(TrainTestEvaluation):
 
     def evaluate(self, dataset, subject, pipelines, paradigm):
         # requires that subject be an int
-        s = subject-1
+        print('Working on subject {}'.format(subject))
+        s = dataset.subject_list.index(subject)
         self.ind_cache[s] = self.ind_cache[s]*0
         allX = np.concatenate(self.X_cache)
         ally = np.concatenate(self.y_cache)
@@ -79,15 +80,24 @@ class CrossSubjectEvaluation(TrainTestEvaluation):
             raise(ValueError("Dataset had no selected events"))
         self.y_cache = []
         self.ind_cache = []
+        new_subject_list = []
         for s in dataset.subject_list:
-            sub = dataset.get_data([s], stack_sessions=True)[0]
-            # get all epochs for individual files in given subject
-            epochs = paradigm._epochs(sub, event_id, dataset.interval)
-            # equalize events from different classes
-            X, y = self.extract_data_from_cont(epochs, event_id)
-            self.X_cache.append(X)
-            self.y_cache.append(y)
-            self.ind_cache.append(np.ones(y.shape))
+            try:
+                sub = dataset.get_data([s], stack_sessions=True)[0]
+                # get all epochs for individual files in given subject
+                epochs = paradigm._epochs(sub, event_id, dataset.interval)
+                # equalize events from different classes
+                X, y = self.extract_data_from_cont(epochs, event_id)
+                self.X_cache.append(X)
+                self.y_cache.append(y)
+                self.ind_cache.append(np.ones(y.shape))
+                new_subject_list.append(s)
+            except Exception as e:
+                print(e)
+                print('skipping subject {}'.format(s))
+        dataset.subject_list=new_subject_list
+        # for i in range(len(self.X_cache)):
+        #     print('{}, {}, {}'.format(self.X_cache[i].shape, self.X_cache[i].nbytes, self.y_cache[i].shape))
 
     def score(self, clf, X, y, groups, scoring):
         le = LabelEncoder()
@@ -109,10 +119,13 @@ class WithinSessionEvaluation(TrainTestEvaluation):
         if not event_id:
             raise(ValueError("Dataset had no selected events"))
 
-        sub = dataset.get_data([subject], stack_sessions=False)[0]
+        try:
+            sub = dataset.get_data([subject], stack_sessions=False)[0]
+        except Exception as e:
+            print(e)
+            return False
         out = {k: [] for k in pipelines.keys()}
         for ind, session in enumerate(sub):
-            skip = False
             # sess_id = '{:03d}_{:d}'.format(subject, ind)
 
             # get all epochs for individual files in given session
@@ -156,7 +169,11 @@ class CrossSessionEvaluation(TrainTestEvaluation):
         if not event_id:
             raise(ValueError("Dataset had no selected events"))
 
-        sub = dataset.get_data([subject], stack_sessions=False)[0]
+        try:
+            sub = dataset.get_data([subject], stack_sessions=False)[0]
+        except Exception as e:
+            print(e)
+            return False
         results = []
         listX, listy = ([], [])
         for ind, session in enumerate(sub):

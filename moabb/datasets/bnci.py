@@ -58,7 +58,7 @@ def load_data(subject, dataset='001-2014', path=None, force_update=False,
         List of raw instances for each non consecutive recording. Depending
         on the dataset it could be a BCI run or a different recording session.
     event_id: dict
-        dictonary containing events and their code.
+        dictonary containing events and their name.
     """
     dataset_list = {'001-2014': _load_data_001_2014,
                     '002-2014': _load_data_002_2014,
@@ -252,9 +252,9 @@ def _load_data_003_2015(subject, path=None, force_update=False,
         flashs = run[9:10]
         ix_flash = flashs[0] > 0
         flashs[0, ix_flash] += 2  # add 2 to avoid overlapp on event id
-        flash_code = np.unique(flashs[0, ix_flash])
+        flash_name = np.unique(flashs[0, ix_flash])
 
-        if len(flash_code) == 36:
+        if len(flash_name) == 36:
             # char mode
             evd = {'Char%d' % ii: (ii + 2) for ii in range(1, 37)}
         else:
@@ -553,7 +553,7 @@ class MNEBNCI(BaseDataset):
 
     def _get_single_subject_data(self, subject, stack_sessions):
         """return data for a single subject"""
-        sessions = load_data(subject=subject, dataset=self.code,
+        sessions = load_data(subject=subject, dataset=self.name,
                                         verbose=False)[0]
         if stack_sessions:
             new_sessions = [[run for session in sessions for run in session]]
@@ -570,7 +570,7 @@ class BNCI2014001(MNEBNCI):
                          sessions_per_subject=2, 
                          events=dict(zip(['left_hand','right_hand','feet','tongue'],
                                   [1,2,3,4])),
-                         code='001-2014',
+                         name='001-2014',
                          interval=[tmin, tmax],
                          paradigm='imagery'
         )

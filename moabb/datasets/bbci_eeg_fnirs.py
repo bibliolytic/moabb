@@ -101,7 +101,7 @@ class BBCIEEGfNIRS(BaseDataset):
         super().__init__(subjects=list(range(1,30)),
                          sessions_per_subject=1,
                          events=dict(left_hand=1, right_hand=2, subtraction=3, rest=4),
-                         code='BBCI EEG fNIRS',
+                         name='BBCI EEG fNIRS',
                          interval=[3.5,10],
                          paradigm='imagery')
         self.fnirs = fnirs      # TODO: actually incorporate fNIRS somehow 

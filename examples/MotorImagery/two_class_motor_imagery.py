@@ -13,14 +13,14 @@ from moabb.viz import meta_analysis as ma
 from moabb.viz import analyze
 
 datasets = utils.dataset_search('imagery',events=['right_hand','left_hand'],
-                                exact_events=True, min_subjects=2, multi_session=False)
+                                has_all_events=True, min_subjects=2, multi_session=False)
 
 pipelines = OrderedDict()
-pipelines['TS'] = make_pipeline(Covariances('oas'), TSclassifier())
+# pipelines['TS'] = make_pipeline(Covariances('oas'), TSclassifier())
 pipelines['CSP+LDA'] = make_pipeline(Covariances('oas'), CSP(8), LDA())
 pipelines['CSP+SVM'] = make_pipeline(Covariances('oas'), CSP(8), SVC())  # 
 
-context = LeftRightImagery(pipelines, WithinSessionEvaluation(), datasets)
+context = LeftRightImagery(pipelines, CrossSubjectEvaluation(), datasets)
 
 results = context.process(results='/is/ei/vjayaram/code/git/moabb/examples/MotorImagery/2class.hdf5')
 

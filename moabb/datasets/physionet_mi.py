@@ -17,7 +17,7 @@ class PhysionetMI(BaseDataset):
             subjects=list(range(1,110)),
             sessions_per_subject=1,
             events=dict(left_hand=2, right_hand=3, feet=5, hands=4, rest=1),
-            code='Physionet Motor Imagery',
+            name='Physionet Motor Imagery',
             interval=[1,3],
             paradigm='imagery'
             )
@@ -36,20 +36,29 @@ class PhysionetMI(BaseDataset):
         raw_files = [read_raw_edf(f, preload=True, verbose='ERROR')
                      for f in raw_fnames]
 
-        # strip channel names of "." characters
-        [raw.rename_channels(lambda x: x.strip('.')) for raw in raw_files]
+        for raw in raw_files:
+            # strip channel names of "." characters
+            raw.rename_channels(lambda x: x.strip('.'))
+            # designate stim channel
+            raw.set_channel_types({'STI 014':'stim'})
+            if not np.isclose(raw.info['sfreq'],160.0):
+                raw.resample(160) 
         all_files.extend(raw_files)
 
         raw_feet_fnames = eegbci.load_data(subject, runs=self.feet_runs, verbose='ERROR')
         raw_feet_files = [read_raw_edf(f, preload=True, verbose='ERROR')
                      for f in raw_feet_fnames]
         for raw in raw_feet_files:
+            raw.set_channel_types({'STI 014':'stim'})
             events = mne.find_events(raw)
             # Event values are added together, previous and current (1,2,3->1,4,5)
-            events[events[:,2] != 1, 2] = 2
+            events[np.logical_or(events[:,2] == 2, events[:,2] == 3), 2] = 2
             events[events[:,2] == 1, 2] = 0
             raw.add_events(events)
-            raw.rename_channels(lambda x: x.strip('.')) 
+            raw.rename_channels(lambda x: x.strip('.'))
+            if not np.isclose(raw.info['sfreq'], 160.0):
+                raw.resample(160)
+
         all_files.extend(raw_feet_files)
         if stack_sessions:
             return [all_files]
