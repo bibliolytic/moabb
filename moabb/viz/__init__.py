@@ -1,9 +1,12 @@
-import pandas as pd
+import os
+import platform
+import shutil
+from datetime import datetime
 import h5py
 import numpy as np
-import os, platform
-from datetime import datetime
+import pandas as pd
 from . import plotting as plt
+
 
 class Results:
     '''Class to hold results from the evaluation.evaluate method. Appropriate test
@@ -30,9 +33,10 @@ class Results:
                 f.attrs['eval'] = np.string_(type(evaluation).__name__)
         else:
             with h5py.File(path, 'r') as f:
-                if f.attrs['eval'] != np.string_(type(evaluation).__name__):
-                    raise ValueError('Given results file has different evaluation to current: {} vs {}'.format(
-                        f.attrs['eval'], type(evaluation).__name__))
+                if evaluation is not None:
+                    if f.attrs['eval'] != np.string_(type(evaluation).__name__):
+                        raise ValueError('Given results file has different evaluation to current: {} vs {}'.format(
+                            f.attrs['eval'], type(evaluation).__name__))
 
     def add(self, pipeline_dict):
         def to_list(d):
@@ -70,7 +74,8 @@ class Results:
                     dset['id'].resize(length, 0)
                     dset['data'].resize(length, 0)
                     dset['id'][-1] = str(d['id'])
-                    dset['data'][-1, :] = np.asarray([d['score'], d['time'], d['n_samples']])
+                    dset[
+                        'data'][-1, :] = np.asarray([d['score'], d['time'], d['n_samples']])
 
     def to_dataframe(self):
         df_list = []
@@ -87,7 +92,6 @@ class Results:
                     df['pipeline'] = name
                     df_list.append(df)
         return pd.concat(df_list, ignore_index=True)
-                
 
     def not_yet_computed(self, pipeline_dict, dataset, subj):
         def already_computed(p, d, s):
@@ -108,7 +112,7 @@ def analyze(out_path, results=None, path=None, name='analysis'):
     '''Given a results object (or the location for one), generates a folder with
     results and a dataframe of the exact data used to generate those results, as
     well as introspection to return information on the computer
-    
+
     In:
     out_path: location to store analysis folder
 
@@ -121,7 +125,8 @@ def analyze(out_path, results=None, path=None, name='analysis'):
     '''
     ### input checks ###
     if results is not None and type(results) is not Results:
-        raise ValueError('Given results argument is not of type moabb.viz.Results')
+        raise ValueError(
+            'Given results argument is not of type moabb.viz.Results')
     if path is not None:
         if type(path) is not str:
             raise ValueError('Given path argument is not string')
@@ -136,14 +141,16 @@ def analyze(out_path, results=None, path=None, name='analysis'):
     elif not os.path.isdir(out_path):
         raise IOError('Given directory does not exist')
     else:
-        analysis_path = os.path.join(out_path,name)
+        analysis_path = os.path.join(out_path, name)
         if os.path.isdir(analysis_path):
-            raise IOError("Analysis directory {} already exists".format(analysis_path))
+            print("Analysis already exists; overwriting")
+            shutil.rmtree(analysis_path)
 
     os.mkdir(analysis_path)
     # TODO: no good cross-platform way of recording CPU info?
-    with open(os.path.join(analysis_path,'info.txt'),'a') as f:
-        f.write('Date: {:%Y-%m-%d}\n Time: {:%H:%M}\n'.format(datetime.now(), datetime.now()))
+    with open(os.path.join(analysis_path, 'info.txt'), 'a') as f:
+        f.write(
+            'Date: {:%Y-%m-%d}\n Time: {:%H:%M}\n'.format(datetime.now(), datetime.now()))
         f.write('System: {}\n'.format(platform.system()))
         f.write('CPU: {}\n'.format(platform.processor()))
 
@@ -153,13 +160,10 @@ def analyze(out_path, results=None, path=None, name='analysis'):
         res = results
 
     data = res.to_dataframe()
-    data.to_csv(os.path.join(analysis_path,'data.csv'))
+    data.to_csv(os.path.join(analysis_path, 'data.csv'))
 
-    plt.score_plot(data).savefig(os.path.join(analysis_path,'scores.pdf'))
-    plt.time_line_plot(data).savefig(os.path.join(analysis_path,'time2d.pdf'))
-
-if __name__ == '__main__':
-    f = '/is/ei/vjayaram/ownCloud/Vinay_share/submissions/MOABB/RHvsLH_within.hdf5'
-    if os.path.isfile(f):
-        os.remove(f)
-    analyze(os.path.dirname(f), path=f)
+    fig, sig = plt.score_plot(data)
+    fig.savefig(os.path.join(analysis_path, 'scores.pdf'))
+    plt.time_line_plot(data).savefig(os.path.join(analysis_path, 'time2d.pdf'))
+    if len(sig) != 0:
+        plt.ordering_plot(data, sig).savefig(os.path.join(analysis_path, 'ordering.pdf'))

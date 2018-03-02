@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import os
 import scipy.stats as stats
+import scipy.linalg as linalg
+
 
 
 def rmANOVA(df):
@@ -49,3 +51,24 @@ def _rmanova(matrix):
     df2 = (k-1)*(n-1)  # calculated as one-way repeated-measures ANOVA
     p = stats.f.sf(f, df1, df2)
     return f, p
+
+def interleave_vectors(a,b):
+    out = np.zeros((len(a)+len(b),1))
+    out[0::2,0] = a
+    out[1::2,0] = b
+    return out
+
+def generate_perm_matrix(b):
+    return linalg.block_diag(*[np.array([1,-1]) if not x else np.array([-1,1]) for x in b])
+
+def return_null_distribution(x, y, iterations):
+    xy = interleave_vectors(x,y)
+    M = np.stack([generate_perm_matrix(np.random.binomial(1,0.5,len(y))) for i in range(iterations)])
+    return np.squeeze(np.tensordot(M,xy,axes=[[2],[0]]))
+
+def permutation_pairedttest(x, y, iterations=1000):
+    null = return_null_distribution(x, y, iterations).mean(axis=1)
+    true = (y-x).mean()
+    return (null > true).mean()
+    
+

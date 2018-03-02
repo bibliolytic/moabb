@@ -78,7 +78,7 @@ class BaseImageryParadigm(ABC):
         for d in self.datasets:
             self.verify(d)
         for d in self.datasets:
-            print('\n\nProcessing dataset: {}'.format(d.code))
+            print('\n\nProcessing dataset: {}'.format(d.name))
             self.evaluator.preprocess_data(d, self)
             for s in d.subject_list:
                 run_pipes = self.results.not_yet_computed(self.pipelines, d, s)

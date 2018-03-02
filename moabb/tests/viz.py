@@ -1,7 +1,9 @@
 import unittest
+import pkg_resources
+import shutil
 import numpy as np
 import moabb.viz.meta_analysis as ma
-from moabb.viz import Results
+from moabb.viz import Results, analyze
 import os
 from moabb.datasets.base import BaseDataset
 from moabb.contexts.base import BaseEvaluation
@@ -74,6 +76,28 @@ class Test_Stats(unittest.TestCase):
         self.assertAlmostEqual(f, 12.53, places=2)
         self.assertAlmostEqual(p, 0.002, places=3)
 
+    def test_interleave(self):
+        a = np.array([1,3,5])
+        b = np.array([2,4,6])
+        o = ma.interleave_vectors(a,b)
+        self.assertTrue((np.arange(1,7) == o.ravel()).all(),o)
+
+    def test_permmatrix(self):
+        b = np.array([False, False, True])
+        intended = [[1,-1,0,0,0,0],
+                    [0,0,1,-1,0,0],
+                    [0,0,0,0,-1,1]]
+        M = ma.generate_perm_matrix(b)
+        self.assertTrue(np.array_equal(np.array(intended),M),M)
+
+    def test_null(self):
+        data = np.array([[1,2],
+                         [3,4],
+                         [5,6]])
+        samples = ma.return_null_distribution(data[:,0],data[:,1],10000).astype(int)
+        self.assertTrue(np.in1d(samples,np.array([1,-1,3,-3])).all())
+        
+        
 
 class Test_Integration(unittest.TestCase):
 
@@ -142,6 +166,39 @@ class Test_Results(unittest.TestCase):
             ('a', 'b', 'c')), np.unique(df['pipeline']))
         self.assertTrue(df.shape[0] == 6, df.shape[0])
 
+# this is only temporary.....
+class Test_Analysis(unittest.TestCase):
+
+    def test_orderplot(self):
+        import moabb.viz.plotting as plotting
+        import matplotlib.pyplot as plt
+        
+        pnames = ['a','b','c','d']
+        dnames = ['1','2']
+        array = np.ndarray((3,2),dtype='object')
+        array[0,0] = [2,3]
+        array[1,0] = [0]
+        array[2,0] = [1]
+        array[0,1] = [1,2,3]
+        array[1,1] = [0]
+        array[2,1] = []
+        ax = plt.subplot(111)
+        plotting.orderplot(ax,array, pnames, dnames)
+        plt.savefig(os.path.join(pkg_resources.resource_filename(__name__,'orderplot.pdf')))
+
+    # @unittest.skip
+    def test_ordering_plot(self):
+        import moabb.viz.plotting as plotting
+        import matplotlib.pyplot as plt
+        r = Results(path=pkg_resources.resource_filename(__name__,
+                                                         'RHvsLH_within.hdf5')).to_dataframe()
+        ax = plotting.ordering_plot(r, r['dataset'].unique())
+        plt.savefig(os.path.join(pkg_resources.resource_filename(__name__,'orderplot_full.pdf')))
+
+    # @unittest.skip
+    def test_analysis(self):
+        d = '/is/ei/vjayaram/ownCloud/Vinay_share/submissions/MOABB/'
+        analyze(d, path=os.path.join(d, 'RHvsLH_within.hdf5'))
 
 if __name__ == "__main__":
     unittest.main()
