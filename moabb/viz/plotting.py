@@ -44,6 +44,7 @@ def score_plot(data, p_threshold=0.05):
                                            facecolor=highlight_color,
                                            alpha=0.3))
 
+    ax.set_title('Scores per dataset and algorithm')
     return fig, sig_diff
 
 
@@ -80,6 +81,7 @@ def orderplot(ax, array, p_names, d_names, margin=0.01):
     ax.set_yticklabels([str(x) for x in np.arange(len(p_names)-1, 0, -1)])
     ax.set_xlabel('Dataset')
     ax.set_ylabel('Algorithm ordering')
+    ax.set_title('Order of pipeline performances')
     
     sea.despine(ax=ax, offset=10, trim=False)
     squares_per_side = np.ceil(
@@ -97,6 +99,7 @@ def orderplot(ax, array, p_names, d_names, margin=0.01):
                                         margin)
                 p = PatchCollection(objs, facecolors=[colors[c] for c in array[row,col]])
                 ax.add_collection(p)
+    
     return ax
 
 
@@ -133,7 +136,24 @@ def ordering_plot(data, d_list, p_threshold=0.05):
         array[-1,ind_d].extend(losers)
         array[-1,ind_d].append(compare_order[0])
     orderplot(ax, array, pipelines, datasets)
-    return fig
+    amounts =  []
+    for ind_c in range(len(datasets)):
+        for ind_r in range(array.shape[0] - 1):
+            if len(array[ind_r,ind_c]) != 0:
+                   amounts.extend([pipelines[i] for i in array[ind_r, ind_c]])
+                   break
+    amounts = np.array(amounts)
+    bar_fig = plt.figure()
+    ax = bar_fig.add_subplot(111)
+    ax.bar(np.arange(1,len(pipelines)+1),
+           np.array([(amounts==p).sum() for p in pipelines]),
+           tick_label=pipelines)
+    ax.set_xlabel('Pipeline')
+    ax.set_ylabel('# of times')
+    ax.set_title('How often each pipeline performed best over datasets')
+                
+
+    return fig, bar_fig
 
 
 

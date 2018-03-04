@@ -166,4 +166,7 @@ def analyze(out_path, results=None, path=None, name='analysis'):
     fig.savefig(os.path.join(analysis_path, 'scores.pdf'))
     plt.time_line_plot(data).savefig(os.path.join(analysis_path, 'time2d.pdf'))
     if len(sig) != 0:
-        plt.ordering_plot(data, sig).savefig(os.path.join(analysis_path, 'ordering.pdf'))
+        order, bar = plt.ordering_plot(data, sig)
+        order.savefig(os.path.join(analysis_path, 'ordering.pdf'))
+        bar.savefig(os.path.join(analysis_path, 'summary.pdf'))
+
