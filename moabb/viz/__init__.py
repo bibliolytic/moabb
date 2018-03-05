@@ -1,10 +1,13 @@
 import os
 import platform
-import shutil
 from datetime import datetime
+
 import h5py
 import numpy as np
 import pandas as pd
+import inspect
+import shutil
+
 from . import plotting as plt
 
 
@@ -18,25 +21,25 @@ class Results:
 
     '''
 
-    def __init__(self, evaluation=None, path=None):
+    def __init__(self, evaluation_class, paradigm_class, suffix='', overwrite=False):
         """
         class that will abstract result storage
         """
-        if path is None:
-            path = os.path.join(os.path.dirname(__file__), 'results.hd5')
-        self.filepath = path
-        if not os.path.isfile(path):
-            if evaluation is None:
-                raise ValueError(
-                    'If no path is provided, must provide an evaluation')
-            with h5py.File(path, 'w') as f:
-                f.attrs['eval'] = np.string_(type(evaluation).__name__)
-        else:
-            with h5py.File(path, 'r') as f:
-                if evaluation is not None:
-                    if f.attrs['eval'] != np.string_(type(evaluation).__name__):
-                        raise ValueError('Given results file has different evaluation to current: {} vs {}'.format(
-                            f.attrs['eval'], type(evaluation).__name__))
+        import moabb.utils as ut
+        from moabb.contexts.base import BaseParadigm, BaseEvaluation
+        assert issubclass(evaluation_class, BaseEvaluation)
+        assert issubclass(paradigm_class, BaseParadigm)
+        self.mod_dir = os.path.dirname(os.path.abspath(inspect.getsourcefile(ut)))
+        self.filepath = os.path.join(self.mod_dir, 'results', paradigm_class.__name__,
+                                     evaluation_class.__name__, 'results{}.hdf5'.format('_'+suffix))
+        os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
+        self.filepath = self.filepath
+        if overwrite and os.path.isfile(self.filepath):
+            os.remove(self.filepath)
+        if not os.path.isfile(self.filepath):
+            with h5py.File(self.filepath, 'w') as f:
+                f.attrs['create_time'] = np.string_(
+                    '{:%Y-%m-%d, %H:%M}'.format(datetime.now()))
 
     def add(self, pipeline_dict):
         def to_list(d):
@@ -108,7 +111,7 @@ class Results:
         return {k: pipeline_dict[k] for k in pipeline_dict.keys() if not already_computed(k, dataset, subj)}
 
 
-def analyze(out_path, results=None, path=None, name='analysis'):
+def analyze(results, out_path, name='analysis', suffix=''):
     '''Given a results object (or the location for one), generates a folder with
     results and a dataframe of the exact data used to generate those results, as
     well as introspection to return information on the computer
@@ -116,7 +119,7 @@ def analyze(out_path, results=None, path=None, name='analysis'):
     In:
     out_path: location to store analysis folder
 
-    results: Obj/None; 
+    results: Obj/tuple; 
 
     path: string/None
 
@@ -124,18 +127,8 @@ def analyze(out_path, results=None, path=None, name='analysis'):
 
     '''
     ### input checks ###
-    if results is not None and type(results) is not Results:
-        raise ValueError(
-            'Given results argument is not of type moabb.viz.Results')
-    if path is not None:
-        if type(path) is not str:
-            raise ValueError('Given path argument is not string')
-        elif not os.path.isfile(path):
-            raise IOError('Given results file does not exist')
-
-    if not (bool(results is None) ^ bool(path is None)):
-        raise ValueError('Either results or path must be given, but not both')
-
+    if type(results) is not Results:
+        res = Results(*results, suffix=suffix)
     if type(out_path) is not str:
         raise ValueError('Given out_path argument is not string')
     elif not os.path.isdir(out_path):
@@ -146,7 +139,7 @@ def analyze(out_path, results=None, path=None, name='analysis'):
             print("Analysis already exists; overwriting")
             shutil.rmtree(analysis_path)
 
-    os.mkdir(analysis_path)
+    os.makedirs(analysis_path, exist_ok=True)
     # TODO: no good cross-platform way of recording CPU info?
     with open(os.path.join(analysis_path, 'info.txt'), 'a') as f:
         f.write(
@@ -154,14 +147,10 @@ def analyze(out_path, results=None, path=None, name='analysis'):
         f.write('System: {}\n'.format(platform.system()))
         f.write('CPU: {}\n'.format(platform.processor()))
 
-    if results is None:
-        res = Results(path=path)
-    else:
-        res = results
+    res = results
 
     data = res.to_dataframe()
     data.to_csv(os.path.join(analysis_path, 'data.csv'))
-
     fig, sig = plt.score_plot(data)
     fig.savefig(os.path.join(analysis_path, 'scores.pdf'))
     plt.time_line_plot(data).savefig(os.path.join(analysis_path, 'time2d.pdf'))
@@ -169,4 +158,3 @@ def analyze(out_path, results=None, path=None, name='analysis'):
         order, bar = plt.ordering_plot(data, sig)
         order.savefig(os.path.join(analysis_path, 'ordering.pdf'))
         bar.savefig(os.path.join(analysis_path, 'summary.pdf'))
-
