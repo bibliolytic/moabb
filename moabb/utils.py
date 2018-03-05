@@ -104,4 +104,4 @@ def find_intersecting_channels(datasets, verbose=False):
     for d in dset_chans:
         allchans.intersection_update(d)
     allchans = [s.replace('Z','z') for s in allchans]
-    return allchans, d
+    return allchans, keep_datasets
