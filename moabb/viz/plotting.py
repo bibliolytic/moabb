@@ -115,7 +115,7 @@ def ordering_plot(data, d_list, p_threshold=0.05):
     fig = plt.figure(figsize=(11, 8.5))
     ax = fig.add_subplot(111)
     pipelines = data['pipeline'].unique()
-    datasets = data['dataset'].unique()
+    datasets = d_list
     array = np.ndarray((len(pipelines),len(datasets)),dtype='object')
     for ind_d, d in enumerate(datasets):
         for ind_p in range(len(pipelines)):
