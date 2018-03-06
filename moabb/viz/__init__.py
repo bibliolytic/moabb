@@ -128,7 +128,7 @@ def analyze(results, out_path, name='analysis', suffix=''):
     '''
     ### input checks ###
     if type(results) is not Results:
-        res = Results(*results, suffix=suffix)
+        results = Results(*results, suffix=suffix)
     if type(out_path) is not str:
         raise ValueError('Given out_path argument is not string')
     elif not os.path.isdir(out_path):

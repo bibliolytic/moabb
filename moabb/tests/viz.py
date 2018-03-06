@@ -175,13 +175,15 @@ class Test_Analysis(unittest.TestCase):
         
         pnames = ['a','b','c','d']
         dnames = ['1','2']
-        array = np.ndarray((3,2),dtype='object')
-        array[0,0] = [2,3]
+        array = np.ndarray((4,2),dtype='object')
+        array[0,0] = [2]
         array[1,0] = [0]
         array[2,0] = [1]
+        array[3,0] = [3]
         array[0,1] = [1,2,3]
         array[1,1] = [0]
         array[2,1] = []
+        array[3,1] = []
         ax = plt.subplot(111)
         plotting.orderplot(ax,array, pnames, dnames)
         plt.savefig(os.path.join(pkg_resources.resource_filename(__name__,'orderplot.pdf')))
@@ -189,16 +191,14 @@ class Test_Analysis(unittest.TestCase):
     # @unittest.skip
     def test_ordering_plot(self):
         import moabb.viz.plotting as plotting
+        from moabb.contexts.evaluations import WithinSessionEvaluation
+        from moabb.contexts.motor_imagery import LeftRightImagery
         import matplotlib.pyplot as plt
-        r = Results(path=pkg_resources.resource_filename(__name__,
-                                                         'RHvsLH_within.hdf5')).to_dataframe()
-        ax = plotting.ordering_plot(r, r['dataset'].unique())
-        plt.savefig(os.path.join(pkg_resources.resource_filename(__name__,'orderplot_full.pdf')))
-
-    # @unittest.skip
-    def test_analysis(self):
-        d = '/is/ei/vjayaram/ownCloud/Vinay_share/submissions/MOABB/'
-        analyze(d, path=os.path.join(d, 'RHvsLH_within.hdf5'))
+        r = Results(WithinSessionEvaluation, LeftRightImagery).to_dataframe()
+        fig, bar_fig = plotting.ordering_plot(r, r['dataset'].unique())
+        fig.savefig(os.path.join(pkg_resources.resource_filename(__name__,'orderplot_full.pdf')))
+        bar_fig.savefig(os.path.join(pkg_resources.resource_filename(__name__,
+                                                                     'barplot.pdf')))
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 from .meta_analysis import rmANOVA, permutation_pairedttest
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sea
@@ -51,7 +53,7 @@ def score_plot(data, p_threshold=0.05):
 def orderplot(ax, array, p_names, d_names, margin=0.01):
     '''
     ax: Axes object
-    array: ndarray of objects, size [len(p_names)-1]*len(d_names)
+    array: ndarray of objects, size len(p_names)*len(d_names)
            Order is same as order in plot. Elements are indices of p_names
     p_names: pipeline names
     d_names: dataset names
@@ -74,11 +76,11 @@ def orderplot(ax, array, p_names, d_names, margin=0.01):
 
     ax.grid(False)
     ax.set_xlim([0, len(d_names)])
-    ax.set_ylim([0, len(p_names)-1])
+    ax.set_ylim([0, len(p_names)])
     ax.set_xticks(0.5+np.arange(len(d_names)))
     ax.set_xticklabels(d_names)
-    ax.set_yticks(0.5+np.arange(len(p_names)-1))
-    ax.set_yticklabels([str(x) for x in np.arange(len(p_names)-1, 0, -1)])
+    ax.set_yticks(0.5+np.arange(len(p_names)))
+    ax.set_yticklabels([str(x) for x in np.arange(len(p_names), 0, -1)])
     ax.set_xlabel('Dataset')
     ax.set_ylabel('Algorithm ordering')
     ax.set_title('Order of pipeline performances')
@@ -114,9 +116,9 @@ def ordering_plot(data, d_list, p_threshold=0.05):
     ax = fig.add_subplot(111)
     pipelines = data['pipeline'].unique()
     datasets = data['dataset'].unique()
-    array = np.ndarray((len(pipelines)-1,len(datasets)),dtype='object')
+    array = np.ndarray((len(pipelines),len(datasets)),dtype='object')
     for ind_d, d in enumerate(datasets):
-        for ind_p in range(len(pipelines)-1):
+        for ind_p in range(len(pipelines)):
             array[ind_p,ind_d] = []
         reduced_data = data[data['dataset'] == d]
         scores = np.array([reduced_data[reduced_data['pipeline'] ==p]['score'] for p in pipelines])
@@ -146,7 +148,7 @@ def ordering_plot(data, d_list, p_threshold=0.05):
     bar_fig = plt.figure()
     ax = bar_fig.add_subplot(111)
     ax.bar(np.arange(1,len(pipelines)+1),
-           np.array([(amounts==p).sum() for p in pipelines]),
+           np.array([np.array(amounts==p).sum() for p in pipelines]),
            tick_label=pipelines)
     ax.set_xlabel('Pipeline')
     ax.set_ylabel('# of times')
