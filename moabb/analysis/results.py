@@ -7,7 +7,9 @@ import inspect
 import shutil
 
 from datetime import datetime
+import logging
 
+log = logging.getLogger()
 
 def get_digest(obj):
     """Return hash of an object repr."""
@@ -103,7 +105,7 @@ class Results:
         df_list = []
         with h5py.File(self.filepath, 'r') as f:
             for _, p_group in f.items():
-                name = p_group['name']
+                name = p_group.attrs['name']
                 for dname, dset in p_group.items():
                     array = np.array(dset['data'])
                     ids = np.array(dset['id'])
@@ -132,11 +134,13 @@ class Results:
 
             # check if digest present
             if digest not in f.keys():
+                log.debug('{}: new pipeline'.format(repr(pipeline)))
                 return False
             else:
                 pipe_grp = f[digest]
                 # if present, check for dataset code
                 if dataset.name not in pipe_grp.keys():
+                    log.debug('{}: new dataset'.format(repr(pipeline)))
                     return False
                 else:
                     # if dataset, check for subject

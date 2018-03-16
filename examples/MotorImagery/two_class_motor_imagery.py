@@ -26,8 +26,8 @@ datasets = utils.dataset_search('imagery', events=['right_hand', 'left_hand'],
                                 has_all_events=True, min_subjects=2,
                                 multi_session=False)
 
-for d in datasets:
-    d.subject_list = d.subject_list[:10]
+# for d in datasets:
+#     d.subject_list = d.subject_list[:10]
 
 paradigm = LeftRightImageryMultiPass(fbands=np.array([[8, 12],
                                                       [12, 16],

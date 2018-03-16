@@ -84,7 +84,7 @@ def orderplot(ax, array, p_names, d_names, margin=0.01):
     ax.set_xlabel('Dataset')
     ax.set_ylabel('Algorithm ordering')
     ax.set_title('Order of pipeline performances')
-    
+
     sea.despine(ax=ax, offset=10, trim=False)
     squares_per_side = np.ceil(
         np.sqrt(np.array([len(x) for x in array[:]]).max()))
@@ -92,16 +92,17 @@ def orderplot(ax, array, p_names, d_names, margin=0.01):
 
     for row in range(array.shape[0]):
         for col in range(array.shape[1]):
-            if len(array[row,col]) > 0:
+            if len(array[row, col]) > 0:
                 zeropt = np.array([col + 0.5, array.shape[0]-row - 0.5]) - 0.25
                 objs = generate_squares(zeropt,
                                         array[row, col],
                                         squares_per_side,
                                         square_side,
                                         margin)
-                p = PatchCollection(objs, facecolors=[colors[c] for c in array[row,col]])
+                p = PatchCollection(
+                    objs, facecolors=[colors[c] for c in array[row, col]])
                 ax.add_collection(p)
-    
+
     return ax
 
 
@@ -116,47 +117,46 @@ def ordering_plot(data, d_list, p_threshold=0.05):
     ax = fig.add_subplot(111)
     pipelines = data['pipeline'].unique()
     datasets = d_list
-    array = np.ndarray((len(pipelines),len(datasets)),dtype='object')
+    array = np.ndarray((len(pipelines), len(datasets)), dtype='object')
     for ind_d, d in enumerate(datasets):
         for ind_p in range(len(pipelines)):
-            array[ind_p,ind_d] = []
+            array[ind_p, ind_d] = []
         reduced_data = data[data['dataset'] == d]
-        scores = np.array([reduced_data[reduced_data['pipeline'] ==p]['score'] for p in pipelines])
+        scores = np.array(
+            [reduced_data[reduced_data['pipeline'] == p]['score'] for p in pipelines])
         compare_order = np.argsort(scores.mean(axis=1))
         ordinal = 0
         losers = []
-        for ind_comp in range(len(compare_order)-1,0,-1):
+        for ind_comp in range(len(compare_order)-1, 0, -1):
             current = losers + [compare_order[ind_comp]]
             pval = permutation_pairedttest(scores[compare_order[ind_comp-1]],
-                                             scores[compare_order[ind_comp]])
+                                           scores[compare_order[ind_comp]])
             if pval < p_threshold:
-                array[ordinal,ind_d].extend(current)
+                array[ordinal, ind_d].extend(current)
                 losers = []
             else:
                 losers.append(compare_order[ind_comp])
             ordinal += 1
-        array[-1,ind_d].extend(losers)
-        array[-1,ind_d].append(compare_order[0])
+        array[-1, ind_d].extend(losers)
+        array[-1, ind_d].append(compare_order[0])
     orderplot(ax, array, pipelines, datasets)
-    amounts =  []
+    amounts = []
     for ind_c in range(len(datasets)):
         for ind_r in range(array.shape[0] - 1):
-            if len(array[ind_r,ind_c]) != 0:
-                   amounts.extend([pipelines[i] for i in array[ind_r, ind_c]])
-                   break
+            if len(array[ind_r, ind_c]) != 0:
+                amounts.extend([pipelines[i] for i in array[ind_r, ind_c]])
+                break
     amounts = np.array(amounts)
     bar_fig = plt.figure()
     ax = bar_fig.add_subplot(111)
-    ax.bar(np.arange(1,len(pipelines)+1),
-           np.array([np.array(amounts==p).sum() for p in pipelines]),
+    ax.bar(np.arange(1, len(pipelines)+1),
+           np.array([np.array(amounts == p).sum() for p in pipelines]),
            tick_label=pipelines)
     ax.set_xlabel('Pipeline')
     ax.set_ylabel('# of times')
     ax.set_title('How often each pipeline performed best over datasets')
-                
 
     return fig, bar_fig
-
 
 
 def time_line_plot(data):

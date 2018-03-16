@@ -110,15 +110,16 @@ class FBCSP(BaseEstimator, TransformerMixin):
     ----------
     """
 
-    def __init__(self, filter_obj=None, feature_selector=None, filters_per_band=4):
+    def __init__(self, filters_per_band=4, total_filters=10, score_func='mi',
+                 filter_obj=None, feature_selector=None):
         """Init."""
         if filter_obj is None:
             self.filter_obj = CSP(filters_per_band)
         else:
             self.filter_obj = filter_obj
         if feature_selector is None:
-            self.feature_selector = SelectKBest(
-                score_func=mutual_info_classif, k=10)
+            self.feature_selector = FBCSPFeatureSelection(
+                score_func, k=total_filters)
         else:
             self.feature_selector = feature_selector
 
@@ -139,3 +140,31 @@ class FBCSP(BaseEstimator, TransformerMixin):
     def transform(self, X):
         out = self.feature_selector.transform(self._transform(X))
         return out
+
+
+class FBCSPFeatureSelection:
+
+    def __repr__(self):
+        return '{}(score={}, k={})'.format(self.__class__.__name__,
+                                           self.score,
+                                           self.k)
+
+    def __init__(self, score, k=10):
+        """
+
+        """
+        self.score = score
+        self.k = k
+        if score == 'mi':
+            self.f = SelectKBest(score_func=mutual_info_classif, k=k)
+        elif score == 'anova':
+            self.f = SelectKBest(k=k)
+        else:
+            raise ValueError("Only mi and anova implemented so far")
+
+    def fit(self, X, y):
+        self.f.fit(X, y)
+        return self
+
+    def transform(self, X):
+        return self.f.transform(X)
