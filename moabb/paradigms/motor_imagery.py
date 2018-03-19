@@ -101,7 +101,12 @@ class BaseMotorImagery(BaseParadigm):
 
 class MotorImageryMultiPass(BaseMotorImagery):
 
-    def __init__(self, fbands=np.array([[8, 14], [20, 30]]),
+    def __init__(self, fbands=np.array([[8, 12],
+                                        [12, 16],
+                                        [16, 20],
+                                        [20, 24],
+                                        [24, 28],
+                                        [28, 32]]),
                  channels=None, **kwargs):
         """init"""
         super().__init__(**kwargs)

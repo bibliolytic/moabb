@@ -5,6 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sea
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import logging
 import numpy as np
 
 sea.set_style("whitegrid")
@@ -13,7 +14,7 @@ colors = sea.color_palette("husl", 10)
 sea.set_palette(colors)
 
 highlight_color = '#8fff76'
-
+log = logging.getLogger()
 
 def score_plot(data, p_threshold=0.05):
     '''
@@ -28,7 +29,7 @@ def score_plot(data, p_threshold=0.05):
     stats = rmANOVA(data)
     sea.violinplot(data=data, y="score", x="dataset",
                    hue="pipeline", inner="point", cut=0, ax=ax, scale='width')
-    ax.set_ylim([0.5, 1])
+    ax.set_ylim([0, 1])
     xticks = ax.get_xticks()
     category_width = xticks[1]-xticks[0]
     dataset_xvals = dict(zip([x.get_text()
@@ -37,14 +38,14 @@ def score_plot(data, p_threshold=0.05):
     for dname, (f, p) in stats.items():
         if p <= p_threshold:
             sig_diff.append(dname)
-            print('{}:{},{}'.format(dname, f, p))
+            log.info('{}:{},{}'.format(dname, f, p))
             xloc = dataset_xvals[dname] - 0.45*category_width
-            ax.add_patch(patches.Rectangle((xloc, 0.5),
+            ax.add_patch(patches.Rectangle((xloc, 0),
                                            0.9*category_width,
-                                           0.5,
+                                           1,
                                            edgecolor='none',
                                            facecolor=highlight_color,
-                                           alpha=0.3))
+                                           alpha=0.2))
 
     ax.set_title('Scores per dataset and algorithm')
     return fig, sig_diff

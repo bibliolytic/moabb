@@ -43,6 +43,10 @@ def analyze(results, out_path, name='analysis', suffix=''):
 
     data = res.to_dataframe()
     data.to_csv(os.path.join(analysis_path, 'data.csv'))
-
-    plt.score_plot(data).savefig(os.path.join(analysis_path, 'scores.pdf'))
+    fig, sig = plt.score_plot(data)
+    fig.savefig(os.path.join(analysis_path, 'scores.pdf'))
     plt.time_line_plot(data).savefig(os.path.join(analysis_path, 'time2d.pdf'))
+    if len(sig) != 0:
+        order, bar = plt.ordering_plot(data, sig)
+        order.savefig(os.path.join(analysis_path, 'ordering.pdf'))
+        bar.savefig(os.path.join(analysis_path, 'summary.pdf'))

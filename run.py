@@ -18,12 +18,13 @@ from copy import deepcopy
 from moabb.pipelines.utils import create_pipeline_from_config
 from moabb import paradigms as para
 from moabb.evaluations import WithinSessionEvaluation
+from moabb.analysis import analyze
 
 # set logs
 mne.set_log_level(False)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
-coloredlogs.install(level=logging.INFO)
+coloredlogs.install(level=logging.DEBUG)
 
 parser = OptionParser()
 parser.add_option(
@@ -104,3 +105,4 @@ for paradigm in paradigms:
     p = getattr(para, paradigm)()
     context = WithinSessionEvaluation(paradigm=p, random_state=42)
     results = context.process(pipelines=paradigms[paradigm])
+    analyze(results, './', name=repr(p))
