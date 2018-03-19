@@ -107,3 +107,4 @@ ENV/
 *.*~
 *.hd5
 *.hdf5
+/moabb/pipelines/multitask_pipeline.py
